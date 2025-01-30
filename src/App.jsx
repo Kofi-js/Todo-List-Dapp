@@ -1,12 +1,14 @@
 import { useState } from "react";
 import abi from "./abi.json";
 import { ethers } from "ethers";
+import { AiOutlineDelete } from "react-icons/ai";
 
 const contractAddress = "0x01B9ca8d3a3f44C673CBE01482498e440131D5cf";
 
 const Index = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
   const [isConnected, setIsConnected] = useState(false);
 
   async function handleConnectWallet() {
@@ -30,17 +32,22 @@ const Index = () => {
   }
 
   async function addTask() {
-    if (typeof window.ethereum !== 'undefined') {
-      await requestAccounts(); // Ensure wallet is connected
+    if (!newTask.trim() || !taskDescription.trim()) {
+      notify("Please enter both task title and description");
+      return;
+    }
+    if (window.ethereum) {
+      await requestAccounts();
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
         const contract = new ethers.Contract(contractAddress, abi, signer);
 
-        const tx = await contract.addTask(newTask.trim(), newTask.trim(), false);
+        const tx = await contract.addTask(newTask.trim(), taskDescription.trim(), false);
         await tx.wait();
         notify("Task added successfully");
         setNewTask("");
+        setTaskDescription("");
         getMyTask();
       } catch (err) {
         console.error("Failed to add Task", err);
@@ -52,7 +59,7 @@ const Index = () => {
   }
 
   async function getMyTask() {
-    if (typeof window.ethereum !== 'undefined') {
+    if (window.ethereum) {
       await requestAccounts();
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
@@ -66,7 +73,7 @@ const Index = () => {
             .map((task) => ({
               id: task.id.toString(),
               title: task.taskTitle,
-              text: task.taskText,
+              description: task.taskText,
             }))
         );
         notify("Tasks fetched successfully");
@@ -80,7 +87,7 @@ const Index = () => {
   }
 
   async function deleteTask(taskId) {
-    if (typeof window.ethereum !== 'undefined') {
+    if (window.ethereum) {
       await requestAccounts();
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
@@ -111,26 +118,33 @@ const Index = () => {
   };
 
   return (
-    <div>
-      <h1>My Tasks</h1>
-      <button onClick={handleConnectWallet}>
+    <div className="bg-gray-900 text-white flex flex-col text-center items-center mx-auto min-h-screen p-6">
+      <h1 className="text-2xl font-press-start font-bold mb-4">My Tasks</h1>
+      <button className="bg-blue-500 px-4 py-2 rounded mb-4" onClick={handleConnectWallet}>
         {isConnected ? "Wallet Connected" : "Connect Wallet"}
       </button>
-      <div>
-        <input
+      <div className="mb-4">
+        <input className="block text-black mb-2 p-2 rounded"
           type="text"
-          placeholder="Add a new task..."
+          placeholder="Task Title"
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
+        />
+        <input className="block mb-2 text-black p-2 rounded"
+          type="text"
+          placeholder="Task Description"
+          value={taskDescription}
+          onChange={(e) => setTaskDescription(e.target.value)}
           onKeyPress={handleKeyPress}
         />
-        <button onClick={addTask}>Add Task</button>
+        <button className="bg-blue-500 px-4 py-2 rounded" onClick={addTask}>Add Task</button>
       </div>
       <div>
         {tasks.map((task) => (
-          <div key={task.id}>
-            <span>{task.title}: {task.text}</span>
-            <button onClick={() => deleteTask(task.id)}>🗑️</button>
+          <div key={task.id} className="flex justify-between p-2 bg-gray-800 rounded mb-2">
+            <span>{task.title}: {task.description}</span>
+            {/* <button onClick={() => deleteTask(task.id)} className="text-red-500">🗑️</button> */}
+            <AiOutlineDelete onClick={() => deleteTask(task.id)} className="text-red-500" />
           </div>
         ))}
         {tasks.length === 0 && <p>No tasks yet. Add one above!</p>}
