@@ -2,14 +2,21 @@ import { useState } from "react";
 import abi from "./abi.json";
 import { ethers } from "ethers";
 import { AiOutlineDelete } from "react-icons/ai";
+import { ToastContainer, toast } from 'react-toastify';
 
-const contractAddress = "0x01B9ca8d3a3f44C673CBE01482498e440131D5cf";
+function App() { 
 
-const Index = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
   const [isConnected, setIsConnected] = useState(false);
+
+  const contractAddress = "0x01B9ca8d3a3f44C673CBE01482498e440131D5cf";
+
+  
+  const notify = (message) => {
+    toast(message);
+  };
 
   async function handleConnectWallet() {
     if (window.ethereum) {
@@ -113,10 +120,6 @@ const Index = () => {
     }
   };
 
-  const notify = (message) => {
-    alert(message);
-  };
-
   return (
     <div className="bg-gray-900 text-white flex flex-col text-center items-center mx-auto min-h-screen p-6">
       <h1 className="text-2xl font-press-start font-bold mb-4">My Tasks</h1>
@@ -149,8 +152,9 @@ const Index = () => {
         ))}
         {tasks.length === 0 && <p>No tasks yet. Add one above!</p>}
       </div>
+      <ToastContainer />
     </div>
   );
 };
 
-export default Index;
+export default App;
